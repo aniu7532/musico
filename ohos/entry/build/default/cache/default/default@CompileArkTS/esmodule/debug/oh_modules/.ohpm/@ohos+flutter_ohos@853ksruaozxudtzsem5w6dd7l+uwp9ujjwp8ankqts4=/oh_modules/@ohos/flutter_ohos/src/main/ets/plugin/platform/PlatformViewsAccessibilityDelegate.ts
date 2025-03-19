@@ -1,0 +1,24 @@
+import type AccessibilityBridge from '../../view/AccessibilityBridge';
+export interface PlatformViewsAccessibilityDelegate {
+    /**
+     * Returns the root of the view hierarchy for the platform view with the requested id, or null if
+     * there is no corresponding view.
+     */
+    getPlatformViewById(viewId: number): Object;
+    /** Returns true if the platform view uses virtual displays. */
+    usesVirtualDisplay(id: number): boolean;
+    /**
+     * Attaches an accessibility bridge for this platform views accessibility delegate.
+     *
+     * <p>Accessibility events originating in platform views belonging to this delegate will be
+     * delegated to this accessibility bridge.
+     */
+    attachAccessibilityBridge(accessibilityBridge: AccessibilityBridge): void;
+    /**
+     * Detaches the current accessibility bridge.
+     *
+     * <p>Any accessibility events sent by platform views belonging to this delegate will be ignored
+     * until a new accessibility bridge is attached.
+     */
+    detachAccessibilityBridge(): void;
+}

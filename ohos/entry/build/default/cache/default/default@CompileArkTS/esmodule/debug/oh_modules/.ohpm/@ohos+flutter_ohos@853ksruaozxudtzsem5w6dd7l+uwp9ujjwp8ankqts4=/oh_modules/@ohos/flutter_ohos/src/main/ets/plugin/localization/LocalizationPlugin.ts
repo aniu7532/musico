@@ -1,0 +1,69 @@
+import type LocalizationChannel from '../../embedding/engine/systemchannels/LocalizationChannel';
+import type { LocalizationMessageHandler } from '../../embedding/engine/systemchannels/LocalizationChannel';
+import type common from "@ohos:app.ability.common";
+import intl from "@ohos:intl";
+import Log from "@package:pkg_modules/.ohpm/@ohos+flutter_ohos@853ksruaozxudtzsem5w6dd7l+uwp9ujjwp8ankqts4=/pkg_modules/@ohos/flutter_ohos/src/main/ets/util/Log";
+import i18n from "@ohos:i18n";
+const TAG = "LocalizationPlugin";
+export default class LocalizationPlugin {
+    private localizationChannel: LocalizationChannel;
+    private context: common.Context;
+    localeFromString(localeString: string): intl.Locale {
+        localeString = localeString.replace('_', '-');
+        let parts: string[] = localeString.split('-', -1);
+        let languageCode = parts[0];
+        let scriptCode = "";
+        let countryCode = "";
+        let index: number = 1;
+        if (parts.length > index && parts[index].length == 4) {
+            scriptCode = parts[index];
+            index++;
+        }
+        if (parts.length > index && parts[index].length >= 2 && parts[index].length <= 3) {
+            countryCode = parts[index];
+            index++;
+        }
+        return new intl.Locale(languageCode + '-' + countryCode + '-' + scriptCode);
+    }
+    private localizationMessageHandler: LocalizationMessageHandler = new enterGetStringResource((key: string, localeString: string | null) => {
+        Log.i(TAG, "getStringResource,key: " + key + ",localeString: " + localeString);
+        let localContext: common.Context = this.context;
+        let stringToReturn: string | null = null;
+        // 获取资源管理器
+        let resMgr = localContext.resourceManager;
+        try {
+            // 如果localeString不为空，则更新为指定地区的资源管理器
+            if (localeString) {
+                let overrideConfig = resMgr.getOverrideConfiguration();
+                overrideConfig.locale = localeString;
+                let overrideResMgr = resMgr.getOverrideResourceManager(overrideConfig);
+                stringToReturn = overrideResMgr.getStringByNameSync(key);
+            }
+            else {
+                stringToReturn = resMgr.getStringByNameSync(key);
+            }
+        }
+        catch (e) {
+            Log.e(TAG, e);
+            return null;
+        }
+        return stringToReturn;
+    });
+    constructor(context: common.Context, localizationChannel: LocalizationChannel) {
+        this.context = context;
+        this.localizationChannel = localizationChannel;
+        this.localizationChannel.setLocalizationMessageHandler(this.localizationMessageHandler);
+    }
+    sendLocaleToFlutter(): void {
+        let systemLocale: string = i18n.System.getSystemLocale();
+        let data: Array<string> = [];
+        data.push(systemLocale);
+        this.localizationChannel.sendLocales(data);
+    }
+}
+class enterGetStringResource {
+    getStringResource: (key: string, localeString: string | null) => string | null;
+    constructor(getStringResource: (key: string, localeString: string | null) => string | null) {
+        this.getStringResource = getStringResource;
+    }
+}

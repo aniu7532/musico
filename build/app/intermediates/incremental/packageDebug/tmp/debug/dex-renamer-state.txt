@@ -1,0 +1,4 @@
+#Wed Mar 19 16:12:23 CST 2025
+base.0=/Users/hw/Desktop/hw/flutter_projects/dookie/beat/build/app/intermediates/dex/debug/mergeDexDebug/classes.dex
+renamed.0=classes.dex
+path.0=classes.dex

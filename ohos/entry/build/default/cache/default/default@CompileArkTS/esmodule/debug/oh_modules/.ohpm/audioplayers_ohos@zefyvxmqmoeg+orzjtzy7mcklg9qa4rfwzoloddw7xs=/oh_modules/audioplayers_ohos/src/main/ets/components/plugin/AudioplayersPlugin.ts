@@ -1,0 +1,375 @@
+import type { FlutterPlugin, FlutterPluginBinding } from '@ohos/flutter_ohos/src/main/ets/embedding/engine/plugins/FlutterPlugin';
+import MethodChannel from "@package:pkg_modules/.ohpm/@ohos+flutter_ohos@853ksruaozxudtzsem5w6dd7l+uwp9ujjwp8ankqts4=/pkg_modules/@ohos/flutter_ohos/src/main/ets/plugin/common/MethodChannel";
+import type { MethodResult } from "@package:pkg_modules/.ohpm/@ohos+flutter_ohos@853ksruaozxudtzsem5w6dd7l+uwp9ujjwp8ankqts4=/pkg_modules/@ohos/flutter_ohos/src/main/ets/plugin/common/MethodChannel";
+import type { EventSink, StreamHandler } from '@ohos/flutter_ohos/src/main/ets/plugin/common/EventChannel';
+import type MethodCall from '@ohos/flutter_ohos/src/main/ets/plugin/common/MethodCall';
+import { EventChannel, Log } from "@package:pkg_modules/.ohpm/@ohos+flutter_ohos@853ksruaozxudtzsem5w6dd7l+uwp9ujjwp8ankqts4=/pkg_modules/@ohos/flutter_ohos/index";
+import type { AbilityAware, AbilityPluginBinding, BinaryMessenger } from "@package:pkg_modules/.ohpm/@ohos+flutter_ohos@853ksruaozxudtzsem5w6dd7l+uwp9ujjwp8ankqts4=/pkg_modules/@ohos/flutter_ohos/index";
+import HashMap from "@ohos:util.HashMap";
+import AudioContextOhos from "@package:pkg_modules/.ohpm/audioplayers_ohos@zefyvxmqmoeg+orzjtzy7mcklg9qa4rfwzoloddw7xs=/pkg_modules/audioplayers_ohos/src/main/ets/components/plugin/AudioContextOhos";
+import { SoundPoolManager } from "@package:pkg_modules/.ohpm/audioplayers_ohos@zefyvxmqmoeg+orzjtzy7mcklg9qa4rfwzoloddw7xs=/pkg_modules/audioplayers_ohos/src/main/ets/components/plugin/player/SoundPoolPlayer";
+import WrappedPlayer from "@package:pkg_modules/.ohpm/audioplayers_ohos@zefyvxmqmoeg+orzjtzy7mcklg9qa4rfwzoloddw7xs=/pkg_modules/audioplayers_ohos/src/main/ets/components/plugin/player/WrappedPlayer";
+import audio from "@ohos:multimedia.audio";
+import UrlSource from "@package:pkg_modules/.ohpm/audioplayers_ohos@zefyvxmqmoeg+orzjtzy7mcklg9qa4rfwzoloddw7xs=/pkg_modules/audioplayers_ohos/src/main/ets/components/plugin/source/UrlSource";
+import BytesSource from "@package:pkg_modules/.ohpm/audioplayers_ohos@zefyvxmqmoeg+orzjtzy7mcklg9qa4rfwzoloddw7xs=/pkg_modules/audioplayers_ohos/src/main/ets/components/plugin/source/BytesSource";
+import { parseReleaseMode } from "@package:pkg_modules/.ohpm/audioplayers_ohos@zefyvxmqmoeg+orzjtzy7mcklg9qa4rfwzoloddw7xs=/pkg_modules/audioplayers_ohos/src/main/ets/components/plugin/ReleaseMode";
+import { parsePlayerMode } from "@package:pkg_modules/.ohpm/audioplayers_ohos@zefyvxmqmoeg+orzjtzy7mcklg9qa4rfwzoloddw7xs=/pkg_modules/audioplayers_ohos/src/main/ets/components/plugin/PlayerMode";
+import wantAgent from "@ohos:app.ability.wantAgent";
+import type { WantAgent } from "@ohos:app.ability.wantAgent";
+import backgroundTaskManager from "@ohos:resourceschedule.backgroundTaskManager";
+import type { BusinessError } from "@ohos:base";
+import AVSessionManager from "@ohos:multimedia.avsession";
+const TAG = "AudioplayersPlugin";
+export default class AudioplayersPlugin implements FlutterPlugin, AbilityAware, IUpdateCallback {
+    private methods?: MethodChannel = undefined;
+    private globalMethods?: MethodChannel = undefined;
+    private globalEvents?: EventHandler = undefined;
+    private context?: Context = undefined;
+    private binaryMessenger?: BinaryMessenger = undefined;
+    private soundPoolManager?: SoundPoolManager = undefined;
+    private players = new HashMap<string, WrappedPlayer>();
+    private defaultAudioContext = new AudioContextOhos();
+    private updateInterval: number | null = null;
+    private abilityBinding?: AbilityPluginBinding = undefined;
+    private session?: AVSessionManager.AVSession = undefined;
+    private isStartContinuousTask = false;
+    getUniqueClassName(): string {
+        return "AudioplayersPlugin";
+    }
+    onAttachedToEngine(binding: FlutterPluginBinding): void {
+        this.context = binding.getApplicationContext();
+        this.binaryMessenger = binding.getBinaryMessenger();
+        this.soundPoolManager = new SoundPoolManager(this);
+        this.methods = new MethodChannel(binding.getBinaryMessenger(), "xyz.luan/audioplayers");
+        this.methods.setMethodCallHandler({
+            onMethodCall: (call: MethodCall, result: MethodResult) => {
+                this.methodCall(call, result);
+            }
+        });
+        this.globalMethods = new MethodChannel(binding.getBinaryMessenger(), "xyz.luan/audioplayers.global");
+        this.globalMethods.setMethodCallHandler({
+            onMethodCall: (call: MethodCall, result: MethodResult) => {
+                this.globalMethodCall(call, result);
+            }
+        });
+        this.globalEvents = new EventHandler(new EventChannel(binding.getBinaryMessenger(), "xyz.luan/audioplayers.global/events"));
+    }
+    onDetachedFromEngine(binding: FlutterPluginBinding): void {
+        this.stopUpdates();
+        this.players.forEach((value: WrappedPlayer, key: string) => value.dispose());
+        this.players.clear();
+        this.soundPoolManager?.dispose();
+        this.globalEvents?.dispose();
+        this.stopUpdates();
+    }
+    private globalMethodCall(call: MethodCall, result: MethodResult): void {
+        switch (call.method) {
+            case "setAudioContext":
+                // TODO 没有相关API
+                //let audioManager = this.getAudioManager()
+                //audioManager.mode = defaultAudioContext.audioMode
+                //audioManager.isSpeakerphoneOn = defaultAudioContext.isSpeakerphoneOn
+                this.defaultAudioContext = this.getAudioContext(call);
+                break;
+            case "emitLog":
+                let message = this.getObjectValue(call, "message", "message is required") as string;
+                this.handleGlobalLog(message);
+                break;
+            case "emitError":
+                let code = this.getObjectValue(call, "code", "code is required") as string;
+                message = this.getObjectValue(call, "message", "message is required") as string;
+                this.handleGlobalError(code, message, null);
+                break;
+            default:
+                result.notImplemented();
+                break;
+        }
+    }
+    private async methodCall(call: MethodCall, response: MethodResult) {
+        let playerId = call.argument("playerId") as string;
+        if (playerId == null || playerId == undefined) {
+            response.success(1);
+            return;
+        }
+        try {
+            if (call.method == "create") {
+                let eventHandler = new EventHandler(new EventChannel(this.binaryMessenger!, `xyz.luan/audioplayers/events/${playerId}`));
+                this.players.set(playerId, new WrappedPlayer(this, eventHandler, this.defaultAudioContext.copy(), this.soundPoolManager!));
+                response.success(1);
+                return;
+            }
+            let player = this.getPlayer(playerId);
+            if (player == null) {
+                response.error("OhosAudioError", "not find player", Error("not find player"));
+                return;
+            }
+            switch (call.method) {
+                case "setSourceUrl":
+                    let url = this.getObjectValue(call, "url", "url is required") as string;
+                    let isLocal = call.hasArgument("isLocal") ? (call.argument("isLocal") as boolean) : false;
+                    await player!.setSource(new UrlSource(url, isLocal));
+                    break;
+                case "setSourceBytes":
+                    let bytes = this.getObjectValue(call, "bytes", "bytes are required") as ArrayBuffer;
+                    player.setSource(new BytesSource(bytes));
+                    break;
+                case "resume":
+                    player.play();
+                    break;
+                case "pause":
+                    player.pause();
+                    break;
+                case "stop":
+                    player.stop();
+                    break;
+                case "release":
+                    player.release();
+                    break;
+                case "seek":
+                    let position = this.getObjectValue(call, "position", "position is required") as number;
+                    player.seek(position);
+                    break;
+                case "setVolume":
+                    let volume = this.getObjectValue(call, "volume", "volume is required") as number;
+                    player.setVolume(volume);
+                    break;
+                case "setBalance":
+                    let balance = this.getObjectValue(call, "balance", "balance is required") as number;
+                    player.setBalance(balance);
+                    break;
+                case "setPlaybackRate":
+                    let rate = this.getObjectValue(call, "playbackRate", "playbackRate is required") as number;
+                    player.setRate(rate);
+                    break;
+                case "getDuration":
+                    let duration = player.getDuration();
+                    response.success(duration ? duration : 0);
+                    return;
+                case "getCurrentPosition":
+                    let postion = player.getCurrentPosition();
+                    response.success(postion ? postion : 0);
+                    return;
+                case "setReleaseMode":
+                    let releaseMode = this.getObjectValue(call, "releaseMode", "releaseMode is required") as string;
+                    player.setReleaseMode(parseReleaseMode(releaseMode));
+                    break;
+                case "setPlayerMode":
+                    let playerMode = this.getObjectValue(call, "playerMode", "playerMode is required") as string;
+                    player.setPlayerMode(parsePlayerMode(playerMode));
+                    break;
+                case "setAudioContext":
+                    let audioContext = this.getAudioContext(call);
+                    player.updateAudioContext(audioContext);
+                    break;
+                case "emitLog":
+                    let message = this.getObjectValue(call, "message", "message is required") as string;
+                    player.handleLog(message);
+                    break;
+                case "emitError":
+                    let code = this.getObjectValue(call, "code", "code is required") as string;
+                    message = this.getObjectValue(call, "message", "message is required") as string;
+                    player.handleError(code, message, null);
+                    break;
+                case "dispose":
+                    player.dispose();
+                    this.players.remove(playerId);
+                    break;
+                default:
+                    response.notImplemented();
+                    return;
+            }
+            response.success(1);
+        }
+        catch (e) {
+            response.error("OhosAudioError", e.message, e);
+        }
+    }
+    private getPlayer(playerId: string): WrappedPlayer | null {
+        if (this.players.hasKey(playerId)) {
+            return this.players.get(playerId);
+        }
+        this.error("Player has not yet been created or has already been disposed.");
+        return null;
+    }
+    getApplicationContext(): Context {
+        return this.context!;
+    }
+    getAudioManager(): audio.AudioManager {
+        return audio.getAudioManager();
+    }
+    handleIsPlaying() {
+        this.startUpdates();
+    }
+    handleDuration(player: WrappedPlayer) {
+        let map = new Map<string, number>();
+        let dutraion = player.getDuration();
+        map.set("value", dutraion ? dutraion : 0);
+        player.eventHandler.success("audio.onDuration", map);
+    }
+    handleComplete(player: WrappedPlayer) {
+        player.eventHandler.success("audio.onComplete");
+    }
+    handlePrepared(player: WrappedPlayer, isPrepared: boolean) {
+        let map = new Map<string, boolean>();
+        map.set("value", isPrepared);
+        player.eventHandler.success("audio.onPrepared", map);
+    }
+    handleLog(player: WrappedPlayer, message: string) {
+        let map = new Map<string, string>();
+        map.set("value", message);
+        player.eventHandler.success("audio.onLog", map);
+    }
+    handleGlobalLog(message: string) {
+        let map = new Map<string, string>();
+        map.set("value", message);
+        this.globalEvents!.success("audio.onLog", map);
+    }
+    handleError(player: WrappedPlayer, errorCode?: string, errorMessage?: string, errorDetails?: any) {
+        player.eventHandler.error(errorCode, errorMessage, errorDetails);
+    }
+    handleGlobalError(errorCode?: string, errorMessage?: string, errorDetails?: any) {
+        this.globalEvents!.error(errorCode, errorMessage, errorDetails);
+    }
+    handleSeekComplete(player: WrappedPlayer) {
+        let map = new Map<string, number>();
+        let position = player.getCurrentPosition();
+        map.set("value", position ? position : 0);
+        player.eventHandler.success("audio.onSeekComplete");
+        player.eventHandler.success("audio.onCurrentPosition", map);
+    }
+    startUpdates() {
+        this.stopUpdates();
+        this.updateInterval = setInterval(() => {
+            this.updateCallback();
+        }, 200);
+    }
+    stopUpdates() {
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
+            this.updateInterval = null;
+        }
+    }
+    private updateCallback() {
+        let mediaPlayers = this.players;
+        let channel = this.methods;
+        if (mediaPlayers == null || channel == null) {
+            this.stopUpdates();
+            return;
+        }
+        let isAnyPlaying = false;
+        mediaPlayers.forEach((player: WrappedPlayer, key: string) => {
+            if (player.isActuallyPlaying()) {
+                isAnyPlaying = true;
+                let time = player.getCurrentPosition();
+                let map = new Map<string, number>();
+                map.set("value", time ? time : 0);
+                player.eventHandler.success("audio.onCurrentPosition", map);
+            }
+        });
+        if (!isAnyPlaying) {
+            this.stopUpdates();
+        }
+    }
+    private getAudioContext(call: MethodCall): AudioContextOhos {
+        let contextOhos = new AudioContextOhos();
+        contextOhos.isSpeakerphoneOn = this.getObjectValue(call, "isSpeakerphoneOn", "isSpeakerphoneOn is required") as boolean;
+        contextOhos.rendererFlags = this.getObjectValue(call, "rendererFlags", "rendererFlags is required") as number;
+        contextOhos.usageType = this.getObjectValue(call, "usageType", "usageType is required") as number;
+        contextOhos.audioScene = this.getObjectValue(call, "audioScene", "audioScene is required") as number;
+        contextOhos.stayAwake = this.getObjectValue(call, "stayAwake", "stayAwake is required") as boolean;
+        return contextOhos;
+    }
+    private getObjectValue(call: MethodCall, key: string, error: string): any {
+        if (call.hasArgument(key)) {
+            return call.argument(key);
+        }
+        this.error(error);
+    }
+    private error(msg: string) {
+        throw new Error(msg);
+    }
+    onAttachedToAbility(binding: AbilityPluginBinding): void {
+        this.abilityBinding = binding;
+    }
+    onDetachedFromAbility(): void {
+        this.abilityBinding = undefined;
+        this.stopContinuousTask();
+    }
+    async startContinuousTask() {
+        Log.d(TAG, `startContinuousTask`);
+        if (this.isStartContinuousTask) {
+            return;
+        }
+        this.isStartContinuousTask = true;
+        let context = this.abilityBinding!.getAbility().context;
+        let type: AVSessionManager.AVSessionType = 'audio';
+        this.session = await AVSessionManager.createAVSession(context, 'audioplayers', type);
+        // 激活接口要在元数据、控制命令注册完成之后再执行
+        await this.session?.activate();
+        Log.d(TAG, `session create done : sessionId : ${this.session?.sessionId}`);
+        let wantAgentInfo: wantAgent.WantAgentInfo = {
+            wants: [
+                {
+                    bundleName: context?.abilityInfo.bundleName,
+                    abilityName: context?.abilityInfo.name
+                }
+            ],
+            actionType: wantAgent.OperationType.START_ABILITY,
+            requestCode: 0,
+            wantAgentFlags: [wantAgent.WantAgentFlags.UPDATE_PRESENT_FLAG]
+        };
+        wantAgent.getWantAgent(wantAgentInfo).then((wantAgentObj: WantAgent) => {
+            backgroundTaskManager.startBackgroundRunning(context, backgroundTaskManager.BackgroundMode.AUDIO_PLAYBACK, wantAgentObj).then(() => {
+                Log.d(TAG, `Succeeded in operationing startBackgroundRunning.`);
+            }).catch((err: BusinessError) => {
+                Log.e(TAG, `Failed to operation startBackgroundRunning. Code is ${err.code}, message is ${err.message}`);
+            });
+        });
+    }
+    async stopContinuousTask() {
+        Log.d(TAG, `stopContinuousTask`);
+        if (!this.isStartContinuousTask) {
+            return;
+        }
+        this.isStartContinuousTask = false;
+        await this.session?.deactivate();
+        await this.session?.destroy();
+        backgroundTaskManager.stopBackgroundRunning(this.abilityBinding?.getAbility().context).then(() => {
+            Log.d(TAG, `Succeeded in operationing stopBackgroundRunning.`);
+        }).catch((err: BusinessError) => {
+            Log.e(TAG, `Failed to operation stopBackgroundRunning. Code is ${err.code}, message is ${err.message}`);
+        });
+    }
+}
+export class EventHandler implements StreamHandler {
+    private eventChannel?: EventChannel = undefined;
+    private eventSink: EventSink | null = null;
+    constructor(eventChannel: EventChannel) {
+        this.eventChannel = eventChannel;
+        this.eventChannel.setStreamHandler(this);
+    }
+    onListen(args: any, events: EventSink): void {
+        this.eventSink = events;
+    }
+    onCancel(args: any): void {
+        this.eventSink = null;
+    }
+    success(method: string, args: Map<string, any> = new Map<string, any>()) {
+        args.set("event", method);
+        this.eventSink?.success(args);
+    }
+    error(errorCode?: string, errorMessage?: string, errorDetails?: any) {
+        this.eventSink?.error(errorCode, errorMessage, errorDetails);
+    }
+    dispose() {
+        if (this.eventSink) {
+            this.eventSink.endOfStream();
+            this.onCancel(null);
+        }
+        this.eventChannel?.setStreamHandler(null);
+    }
+}
+interface IUpdateCallback {
+    stopUpdates(): void;
+    startUpdates(): void;
+}
