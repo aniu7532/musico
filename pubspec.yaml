@@ -1,0 +1,36 @@
+name: beat
+description: A new Flutter project.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=2.19.6 <3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.2
+  easy_localization: ^3.0.7+1
+  auto_route: 7.8.1
+# just_audio:
+#   git:
+#     url: "https://gitcode.com/openharmony-sig/fluttertpc_just_audio.git"
+#     path: "just_audio"
+  audioplayers:
+    git:
+      url: "https://gitcode.com/openharmony-sig/flutter_audioplayers.git"
+      path: "packages/audioplayers"
+dev_dependencies:
+  build_runner: 2.3.3
+  easy_localization_generator: 0.3.0
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/translations/
+    - assets/sound/
