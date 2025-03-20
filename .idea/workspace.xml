@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="08b45ee7-d7ec-49c2-be81-e50543c82aea" name="Changes" comment="modify base">
-      <change afterPath="$PROJECT_DIR$/lib/beat/beat.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/music_theory/syllable_name.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/music_theory/syllable_name.dart" afterDir="false" />
-    </list>
+    <list default="true" id="08b45ee7-d7ec-49c2-be81-e50543c82aea" name="Changes" comment="modify base" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
