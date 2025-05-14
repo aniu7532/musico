@@ -2,25 +2,6 @@ import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const RandomNumberGeneratorApp());
-}
-
-class RandomNumberGeneratorApp extends StatelessWidget {
-  const RandomNumberGeneratorApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Syllable',
-      theme: ThemeData(
-        primarySwatch: Colors.orange,
-      ),
-      home: const RandomNumberGeneratorPage(),
-    );
-  }
-}
-
 class RandomNumberGeneratorPage extends StatefulWidget {
   const RandomNumberGeneratorPage({super.key});
 
