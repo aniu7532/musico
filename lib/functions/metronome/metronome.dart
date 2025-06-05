@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:beat/l10n/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class MetronomePage extends StatefulWidget {
@@ -111,7 +111,7 @@ class _MetronomePageState extends State<MetronomePage>
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'title'.tr(),
+          AppLocalizations.of(context).title1,
         ),
       ),
       body: Padding(
@@ -179,7 +179,9 @@ class _MetronomePageState extends State<MetronomePage>
                       const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
                   textStyle: const TextStyle(fontSize: 20),
                 ),
-                child: Text(isPlaying ? '停止' : '开始'),
+                child: Text(isPlaying
+                    ? AppLocalizations.of(context).stop
+                    : AppLocalizations.of(context).start),
               )
             ],
           ),

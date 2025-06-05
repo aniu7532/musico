@@ -1,0 +1,12 @@
+{
+  "helloWorld": "Hello, world!",
+  "title1": "Unprofessional Metronome",
+  "title2": "Random Solfège Generator",
+  "stop": "Stop",
+  "start": "Start",
+  "randomNumberTitle": "Random Syllable Names",
+  "showSingName": "Show syllable names",
+  "musicalAlphabet":"musicalAlphabet",
+  "groups":"How Many Groups",
+  "numbersPerGroup":"How Many Numbers per Group"
+}

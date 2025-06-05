@@ -10,9 +10,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
+  flutter_localizations:
+    sdk: flutter
+  intl: any
   cupertino_icons: ^1.0.2
-  easy_localization: ^3.0.7+1
   auto_route: 7.8.1
 # just_audio:
 #   git:
@@ -22,15 +23,13 @@ dependencies:
     git:
       url: "https://gitcode.com/openharmony-sig/flutter_audioplayers.git"
       path: "packages/audioplayers"
+
 dev_dependencies:
-  build_runner: 2.3.3
-  easy_localization_generator: 0.3.0
-  flutter_test:
-    sdk: flutter
   flutter_lints: ^2.0.0
 
 flutter:
+  generate: true
   uses-material-design: true
   assets:
-    - assets/translations/
+    - assets/images/
     - assets/sound/

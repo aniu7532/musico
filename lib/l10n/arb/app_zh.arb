@@ -1,0 +1,12 @@
+{
+    "helloWorld": "你好 世界!",
+    "title1": "不专业的节拍器",
+    "title2":"随机唱名生产器",
+    "stop":"停止",
+    "start":"开始",
+    "randomNumberTitle":"随机唱名生成器",
+    "showSingName":"展示唱名",
+    "musicalAlphabet":"音名",
+    "groups":"有几组",
+    "numbersPerGroup":"每组多少数字"
+}

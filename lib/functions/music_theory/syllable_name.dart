@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:beat/l10n/gen_l10n/app_localizations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -29,10 +30,16 @@ class _RandomNumberGeneratorPageState extends State<RandomNumberGeneratorPage> {
   }
 
   @override
+  void initState() {
+    _generateRandomNumbers();
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('随机数字生成器'),
+        title: Text(AppLocalizations.of(context).title2),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -44,9 +51,9 @@ class _RandomNumberGeneratorPageState extends State<RandomNumberGeneratorPage> {
                   child: TextField(
                     controller: _nController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: '组数 (N)',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: '${AppLocalizations.of(context).groups} (N)',
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ),
@@ -55,9 +62,10 @@ class _RandomNumberGeneratorPageState extends State<RandomNumberGeneratorPage> {
                   child: TextField(
                     controller: _mController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: '每组数字个数 (M)',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText:
+                          '${AppLocalizations.of(context).numbersPerGroup}(M)',
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ),
@@ -65,7 +73,7 @@ class _RandomNumberGeneratorPageState extends State<RandomNumberGeneratorPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text('展示唱名'),
+                      Text(AppLocalizations.of(context).showSingName),
                       CupertinoSwitch(
                         thumbColor: Colors.brown,
                         trackColor: Colors.brown.shade100,
@@ -110,7 +118,7 @@ class _RandomNumberGeneratorPageState extends State<RandomNumberGeneratorPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _generateRandomNumbers,
-        child: Icon(Icons.refresh),
+        child: const Icon(Icons.refresh),
       ),
     );
   }

@@ -1,0 +1,9 @@
+{
+    "helloWorld": "¡Hola, mundo!",
+    "title1": "Metrónomo no profesional",
+    "title2": "Generador aleatorio de solfeo",
+    "stop": "Detener",
+    "start": "Iniciar",
+    "randomNumberTitle": "Generador de números aleatorios",
+    "showSingName": "Mostrar solfeo"
+}
