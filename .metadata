@@ -4,8 +4,8 @@
 # This file should be version controlled.
 
 version:
-  revision: c30116276c954b47fd075e716fed3c5ad64ad259
-  channel: 3.7.12-ohos-1.0.3
+  revision: 8bd840477abf8eafca3aba7ec02b9e95c78c7cb2
+  channel: br_3.7.12-ohos-1.0.6
 
 project_type: app
 
@@ -13,29 +13,11 @@ project_type: app
 migration:
   platforms:
     - platform: root
-      create_revision: c30116276c954b47fd075e716fed3c5ad64ad259
-      base_revision: c30116276c954b47fd075e716fed3c5ad64ad259
-    - platform: android
-      create_revision: c30116276c954b47fd075e716fed3c5ad64ad259
-      base_revision: c30116276c954b47fd075e716fed3c5ad64ad259
-    - platform: ios
-      create_revision: c30116276c954b47fd075e716fed3c5ad64ad259
-      base_revision: c30116276c954b47fd075e716fed3c5ad64ad259
-    - platform: linux
-      create_revision: c30116276c954b47fd075e716fed3c5ad64ad259
-      base_revision: c30116276c954b47fd075e716fed3c5ad64ad259
-    - platform: macos
-      create_revision: c30116276c954b47fd075e716fed3c5ad64ad259
-      base_revision: c30116276c954b47fd075e716fed3c5ad64ad259
+      create_revision: 8bd840477abf8eafca3aba7ec02b9e95c78c7cb2
+      base_revision: 8bd840477abf8eafca3aba7ec02b9e95c78c7cb2
     - platform: web
-      create_revision: c30116276c954b47fd075e716fed3c5ad64ad259
-      base_revision: c30116276c954b47fd075e716fed3c5ad64ad259
-    - platform: windows
-      create_revision: c30116276c954b47fd075e716fed3c5ad64ad259
-      base_revision: c30116276c954b47fd075e716fed3c5ad64ad259
-    - platform: ohos
-      create_revision: c30116276c954b47fd075e716fed3c5ad64ad259
-      base_revision: c30116276c954b47fd075e716fed3c5ad64ad259
+      create_revision: 8bd840477abf8eafca3aba7ec02b9e95c78c7cb2
+      base_revision: 8bd840477abf8eafca3aba7ec02b9e95c78c7cb2
 
   # User provided section
 
