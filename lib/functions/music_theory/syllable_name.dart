@@ -96,7 +96,7 @@ class _RandomNumberGeneratorPageState extends State<RandomNumberGeneratorPage> {
               child: ListView.builder(
                 itemCount: _randomNumbers.length,
                 shrinkWrap: true,
-                itemExtent: 100,
+                itemExtent: 150,
                 itemBuilder: (context, index) {
                   return Center(
                     child: ListView.builder(
@@ -132,8 +132,8 @@ class Number extends StatelessWidget {
 
   const Number({
     super.key,
-    this.numberSize = 30,
-    this.syllableSize = 14,
+    this.numberSize = 50,
+    this.syllableSize = 24,
     required this.number,
     required this.syllable,
   });
@@ -143,7 +143,7 @@ class Number extends StatelessWidget {
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(20),
           child: Text(
             number,
             style: TextStyle(

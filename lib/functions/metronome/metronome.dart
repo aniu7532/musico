@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:beat/l10n/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -14,95 +12,94 @@ class _MetronomePageState extends State<MetronomePage>
   late AnimationController _progressController;
   late Animation<double> _progressAnimation;
 
-  final player = AudioPlayer();
-  final source = AssetSource('sound/metronome0-1.wav');
-  double bpm = 60; // 初始 BPM
-  Timer? timer;
+  final player = AudioPlayer(); // 音频播放器
+  final source = AssetSource('sound/metronome0-1.wav'); // 音效资源
+
+  double bpm = 60; // 默认 BPM
   bool isPlaying = false;
 
   @override
   void initState() {
     super.initState();
-    // 预加载音效资源
-    player.setSource(source);
-
+    _setupPlayer();
     _initProgressAnimation();
   }
 
+  /// 初始化音频播放器，预加载音效并设置播放模式
+  Future<void> _setupPlayer() async {
+    await player.setSource(source);
+    await player.setReleaseMode(ReleaseMode.stop); // 每次播放后自动停止
+  }
+
+  /// 初始化动画控制器和动画曲线
   void _initProgressAnimation() {
-    final intervalMs = (60000 / bpm).round();
+    final intervalMs = (60000 / bpm).round(); // 每拍的毫秒数
+
     _progressController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: intervalMs),
     );
-    _progressAnimation =
-        Tween<double>(begin: 0.0, end: 1.0).animate(_progressController)
-          ..addStatusListener((status) {
-            if (status == AnimationStatus.completed && isPlaying) {
-              // 每拍结束时播放声音
-              player.play(source, mode: PlayerMode.mediaPlayer);
-              // 重置并继续下一拍动画
-              _progressController.reset();
-              _progressController.forward();
-            }
-          });
+
+    _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _progressController,
+        curve: Curves.easeInOut, // 更平滑的节奏感
+      ),
+    )..addStatusListener((status) {
+        if (status == AnimationStatus.completed && isPlaying) {
+          _playTick(); // 播放节拍音效
+          _progressController.forward(from: 0.0); // 重启动画
+        }
+      });
   }
 
-  // 开始节拍器：取消旧定时器并启动新定时器
+  /// 播放节拍音效
+  Future<void> _playTick() async {
+    try {
+      await player.seek(Duration.zero); // 回到起始位置
+      await player.resume(); // 播放
+    } catch (e) {
+      debugPrint("音效播放失败: $e");
+    }
+  }
+
+  /// 启动节拍器
   void startMetronome() {
-    stopMetronome();
     setState(() {
       isPlaying = true;
     });
-
     _progressController.forward(from: 0.0);
-    scheduleTick();
   }
 
-  // 根据当前 bpm 计算每一拍的间隔，设置定时器播放节拍音效
-  void scheduleTick() {
-    final duration = Duration(milliseconds: (60000 / bpm).round());
-
-    timer = Timer(duration, () {
-      // 播放音效
-      player.play(source, mode: PlayerMode.mediaPlayer);
-
-      // 若节拍器仍在运行，重新调度下一拍
-      if (isPlaying) {
-        scheduleTick();
-      }
-    });
-  }
-
-  // 停止节拍器
+  /// 停止节拍器
   void stopMetronome() {
-    timer?.cancel();
-    _progressController.stop();
     setState(() {
       isPlaying = false;
     });
+    _progressController.stop();
   }
 
-  // 当 BPM 调整时更新状态，如果正在运行则重新调度定时器
+  /// BPM 调整逻辑
   void onBpmChanged(double newBpm) {
+    if (newBpm == bpm) return;
+
     setState(() {
       bpm = newBpm;
     });
 
+    // 只更新 AnimationController 的 duration，无需重建
+    final newDuration = Duration(milliseconds: (60000 / bpm).round());
+    _progressController.duration = newDuration;
+
     if (isPlaying) {
-      timer?.cancel();
-      scheduleTick();
-      _progressController.stop();
-      _initProgressAnimation();
-      _progressController.forward();
-    } else {
-      _initProgressAnimation();
+      _progressController.forward(from: 0.0); // 根据新节奏重启动画
     }
   }
 
   @override
   void dispose() {
-    timer?.cancel();
+    _progressController.dispose(); // 释放动画控制器
+    player.dispose(); // 释放音频资源
     super.dispose();
   }
 
@@ -110,9 +107,7 @@ class _MetronomePageState extends State<MetronomePage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          AppLocalizations.of(context).title1,
-        ),
+        title: Text(AppLocalizations.of(context).title1),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -120,6 +115,7 @@ class _MetronomePageState extends State<MetronomePage>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // 中间动画进度条
               Expanded(
                 child: AnimatedBuilder(
                   animation: _progressAnimation,
@@ -127,6 +123,7 @@ class _MetronomePageState extends State<MetronomePage>
                     return Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        // 左侧进度条
                         SizedBox(
                           width: 100,
                           height: 10,
@@ -140,13 +137,13 @@ class _MetronomePageState extends State<MetronomePage>
                           ),
                         ),
                         const SizedBox(width: 20),
+                        // 右侧进度条（错拍效果）
                         SizedBox(
                           width: 100,
                           height: 10,
                           child: Transform.rotate(
                             angle: 0.75,
                             child: LinearProgressIndicator(
-                              // 第二个进度条可使用 value == 1 - firstValue 来实现错拍效果
                               value: _progressAnimation.value >= 0.5
                                   ? (_progressAnimation.value - 0.5) * 2
                                   : 0,
@@ -158,20 +155,24 @@ class _MetronomePageState extends State<MetronomePage>
                   },
                 ),
               ),
+              const SizedBox(height: 20),
+              // BPM 显示
               Text(
                 'BPM: ${bpm.toInt()}',
                 style: const TextStyle(fontSize: 32),
               ),
               const SizedBox(height: 20),
+              // BPM 滑动条
               Slider(
                 value: bpm,
                 min: 20,
                 max: 208,
-                divisions: 168,
+                divisions: 188,
                 label: bpm.toInt().toString(),
                 onChanged: onBpmChanged,
               ),
               const SizedBox(height: 40),
+              // 启动/停止按钮
               ElevatedButton(
                 onPressed: isPlaying ? stopMetronome : startMetronome,
                 style: ElevatedButton.styleFrom(
