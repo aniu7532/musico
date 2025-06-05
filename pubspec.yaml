@@ -15,10 +15,6 @@ dependencies:
   intl: any
   cupertino_icons: ^1.0.2
   auto_route: 7.8.1
-# just_audio:
-#   git:
-#     url: "https://gitcode.com/openharmony-sig/fluttertpc_just_audio.git"
-#     path: "just_audio"
   audioplayers: ^4.1.0
 
 dev_dependencies:
