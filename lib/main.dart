@@ -11,7 +11,6 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -23,13 +22,13 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
-      home: HomePage(),
+      home: const HomePage(),
     );
   }
 }
 
 class HomePage extends StatefulWidget {
-  HomePage({super.key});
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -64,7 +63,7 @@ class _HomePageState extends State<HomePage> {
                 child: InkWell(
                   onTap: () {
                     if (functionName == AppLocalizations.of(context).title1) {
-                      gotoPage = MetronomePage();
+                      gotoPage = const MetronomePage();
                     } else if (functionName ==
                         AppLocalizations.of(context).title2) {
                       gotoPage = const RandomNumberGeneratorPage();

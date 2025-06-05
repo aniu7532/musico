@@ -1,13 +1,16 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:beat/l10n/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class MetronomePage extends StatefulWidget {
+  const MetronomePage({super.key});
+
   @override
-  _MetronomePageState createState() => _MetronomePageState();
+  MetronomePageState createState() => MetronomePageState();
 }
 
-class _MetronomePageState extends State<MetronomePage>
+class MetronomePageState extends State<MetronomePage>
     with TickerProviderStateMixin {
   late AnimationController _progressController;
   late Animation<double> _progressAnimation;
@@ -86,7 +89,8 @@ class _MetronomePageState extends State<MetronomePage>
     setState(() {
       bpm = newBpm;
     });
-
+    // 调用轻微震动（只有在值变化显著时调用一次，避免震动频繁）
+    HapticFeedback.heavyImpact();
     // 只更新 AnimationController 的 duration，无需重建
     final newDuration = Duration(milliseconds: (60000 / bpm).round());
     _progressController.duration = newDuration;
