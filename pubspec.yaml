@@ -19,10 +19,7 @@ dependencies:
 #   git:
 #     url: "https://gitcode.com/openharmony-sig/fluttertpc_just_audio.git"
 #     path: "just_audio"
-  audioplayers:
-    git:
-      url: "https://gitcode.com/openharmony-sig/flutter_audioplayers.git"
-      path: "packages/audioplayers"
+  audioplayers: ^4.1.0
 
 dev_dependencies:
   flutter_lints: ^2.0.0
