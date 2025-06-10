@@ -29,3 +29,4 @@ jobs:
         with:
           branch: gh-pages1
           folder: build/web
+          clean: true #clean: true 会彻底删除 gh-pages 分支旧内容，避免旧的 index.html 或其他资源干扰
