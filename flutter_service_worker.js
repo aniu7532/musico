@@ -37,8 +37,8 @@ const RESOURCES = {
 "assets/NOTICES": "54a1e7bc73c68e4e037bea06476a7cc9",
 "flutter.js": "a85fcf6324d3c4d3ae3be1ae4931e9c5",
 "manifest.json": "83574d63eba27509f58b927d9ad3e971",
-"index.html": "3b50a837ce8a0049c0f64427950682c3",
-"/": "3b50a837ce8a0049c0f64427950682c3",
+"index.html": "8a043b4e94560893915a172f672a2ec5",
+"/": "8a043b4e94560893915a172f672a2ec5",
 "version.json": "e330f05062640a68e93b317f24baddd3",
 "main.dart.js": "2615b564baddba4a95a57b766f2afdee",
 "favicon.png": "5dcef449791fa27946b3d35ad8803796"
