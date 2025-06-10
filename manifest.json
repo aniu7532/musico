@@ -1,6 +1,6 @@
 {
-    "name": "beat",
-    "short_name": "beat",
+    "name": "musico",
+    "short_name": "musico",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
